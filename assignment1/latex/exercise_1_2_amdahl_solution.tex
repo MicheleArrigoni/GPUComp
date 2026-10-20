@@ -1,0 +1,122 @@
+% Risposta alla sezione 1.2 di Exercise01.pdf.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlength{\emergencystretch}{2em}
+\title{Exercise 1.2: Amdahl's Law}
+\author{}
+\date{}
+\begin{document}
+\maketitle
+\vspace{-2em}
+\section*{1. Derivation}
+Let $T_1$ be the sequential execution time of a fixed workload, $P$ the fraction
+of this time that can be parallelized, and $N$ the number of processors.
+The serial part takes $(1-P)T_1$. Assuming perfect load balancing, no parallel
+overhead, and an ideal $N$-fold acceleration of the parallel part, its execution
+time is $PT_1/N$. Hence
+\begin{equation}
+  T_N=(1-P)T_1+\frac{PT_1}{N}
+     =T_1\left((1-P)+\frac{P}{N}\right).
+\end{equation}
+The overall speedup is therefore
+\begin{equation}
+  \boxed{S(N)=\frac{T_1}{T_N}=\frac{1}{(1-P)+P/N}}.
+  \label{eq:law}
+\end{equation}
+For $0\leq P<1$,
+\begin{equation}
+  \lim_{N\to\infty}S(N)=\frac{1}{1-P}.
+\end{equation}
+The serial fraction sets the asymptotic limit. For the special case $P=1$,
+the ideal speedup is $S(N)=N$ and there is no finite serial-fraction limit.
+
+\section*{2. Correctness for real applications}
+Amdahl's law is correct under its assumptions. It is not a universal prediction
+for every parallel execution: using $N$ as the acceleration of the parallel
+portion assumes that overhead and other architectural effects can be neglected.
+
+\paragraph{Performance predicted too high.}
+Communication, synchronization, thread creation, and load imbalance increase
+the actual time. Consider a computation with an ideal $100\times$ speedup
+whose processors exchange intermediate results
+over a network. If communication becomes a bottleneck, the actual speedup
+is below $100\times$. Writing
+\[
+  T_N=T_1\left((1-P)+\frac{P}{N}\right)+T_{\mathrm{overhead}}(N)
+\]
+makes clear why positive overhead reduces the ideal speedup.
+
+\paragraph{Performance predicted too low.}
+A working set that exceeds the cache of one processor may fit into the aggregate caches
+when partitioned across several processors. Reducing slow memory accesses
+can accelerate the parallel part by more than $N$, so actual speedup can
+exceed the prediction of Equation~\eqref{eq:law}, and can even be superlinear.
+This changes the assumed acceleration of the parallel portion; it does not
+invalidate the time-decomposition argument.
+
+\paragraph{Changing the workload.}
+In weather forecasting, more processors are often used to increase grid
+resolution rather than to finish an unchanged
+problem sooner. Amdahl's fixed-workload limit does not directly characterize
+this comparison. Weak scaling studies increasing the workload in proportion
+to the number of processors, while Gustafson's law addresses scaled speedup
+using the serial fraction of a parallel run. These perspectives change the
+workload assumptions used in the fixed-size Amdahl model.
+
+\section*{3. Numerical calculations and comparison}
+\subsection*{(a) $P=0.5$ and $N=4$}
+\[
+  S_A=\frac{1}{(1-0.5)+0.5/4}
+     =\frac{1}{0.5+0.125}
+     =\boxed{1.6}.
+\]
+The parallel execution takes $0.625T_1$, and its efficiency is
+$S_A/4=0.4=40\%$.
+
+\subsection*{(b) $P=0.2$ and $N=8$}
+\[
+  S_B=\frac{1}{(1-0.2)+0.2/8}
+     =\frac{1}{0.8+0.025}
+     =\boxed{\frac{40}{33}\approx1.212}.
+\]
+The parallel execution takes $0.825T_1$, and its efficiency is
+$S_B/8=5/33\approx15.15\%$.
+
+\subsection*{(c) Comparison}
+\begin{center}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Case & $P$ & $N$ & Speedup & Limit as $N\to\infty$\\
+\midrule
+A & $0.5$ & $4$ & $1.6$ & $2$\\
+B & $0.2$ & $8$ & $1.212\ldots$ & $1.25$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Case A is faster relative to its sequential baseline despite having fewer
+processors. Its larger parallelizable fraction leaves a smaller serial
+bottleneck. In case B, $80\%$ of the original time remains serial, so even
+arbitrarily many processors cannot produce a speedup above $1.25$.
+
+These cases change both $P$ and $N$, so their difference cannot be attributed
+to processor count alone. For any fixed $P>0$, adding processors increases
+ideal speedup, but with diminishing returns when $P<1$.
+Reducing the serial fraction is essential for effective scaling.
+
+For comparison, keeping $P=0.5$ and increasing only $N$ from four to eight
+would give
+\[
+  S(8)=\frac{1}{0.5+0.5/8}=\frac{16}{9}\approx1.778.
+\]
+
+\end{document}
