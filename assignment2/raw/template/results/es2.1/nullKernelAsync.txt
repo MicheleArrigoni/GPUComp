@@ -1,0 +1,7 @@
+Measuring asynchronous launch time... 5.55 us
+Measuring synchronous launch time... 6.04 us
+
+Below is a summary of your jobs efficency.
+Please use this to adjust Time, CPU and Memory allocations to ensure an efficently running cluster :)
+   JobID    State       Elapsed  TimeEff   CPUEff   MemEff 
+  279658  COMPLETED    00:00:01   0.1%     100.0%    0.4%  

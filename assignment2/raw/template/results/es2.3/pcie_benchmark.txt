@@ -1,0 +1,54 @@
+GPU: NVIDIA GeForce RTX 2080 Ti
+Maximum transfer size: 1024 MiB
+      1024 B  pageable  H2D      0.1692 GB/s
+      1024 B  pageable  D2H      0.1294 GB/s
+      1024 B    pinned  H2D      0.1508 GB/s
+      1024 B    pinned  D2H      0.1492 GB/s
+      4096 B  pageable  H2D      0.6585 GB/s
+      4096 B  pageable  D2H      0.4931 GB/s
+      4096 B    pinned  H2D      0.5783 GB/s
+      4096 B    pinned  D2H       0.591 GB/s
+     16384 B  pageable  H2D       2.271 GB/s
+     16384 B  pageable  D2H        1.64 GB/s
+     16384 B    pinned  H2D       2.055 GB/s
+     16384 B    pinned  D2H       2.263 GB/s
+     65536 B  pageable  H2D       4.894 GB/s
+     65536 B  pageable  D2H       3.648 GB/s
+     65536 B    pinned  H2D       5.421 GB/s
+     65536 B    pinned  D2H       6.007 GB/s
+    262144 B  pageable  H2D       6.508 GB/s
+    262144 B  pageable  D2H       5.161 GB/s
+    262144 B    pinned  H2D        9.68 GB/s
+    262144 B    pinned  D2H       10.31 GB/s
+   1048576 B  pageable  H2D       7.351 GB/s
+   1048576 B  pageable  D2H       5.691 GB/s
+   1048576 B    pinned  H2D       11.98 GB/s
+   1048576 B    pinned  D2H       12.52 GB/s
+   4194304 B  pageable  H2D       10.93 GB/s
+   4194304 B  pageable  D2H       8.648 GB/s
+   4194304 B    pinned  H2D       12.74 GB/s
+   4194304 B    pinned  D2H       13.08 GB/s
+  16777216 B  pageable  H2D       12.12 GB/s
+  16777216 B  pageable  D2H       9.883 GB/s
+  16777216 B    pinned  H2D       12.96 GB/s
+  16777216 B    pinned  D2H       13.44 GB/s
+  67108864 B  pageable  H2D       12.57 GB/s
+  67108864 B  pageable  D2H       10.26 GB/s
+  67108864 B    pinned  H2D       13.06 GB/s
+  67108864 B    pinned  D2H       13.49 GB/s
+ 268435456 B  pageable  H2D       12.68 GB/s
+ 268435456 B  pageable  D2H       10.36 GB/s
+ 268435456 B    pinned  H2D       13.08 GB/s
+ 268435456 B    pinned  D2H       13.51 GB/s
+1073741824 B  pageable  H2D       12.73 GB/s
+1073741824 B  pageable  D2H       10.39 GB/s
+1073741824 B    pinned  H2D       13.08 GB/s
+1073741824 B    pinned  D2H       13.51 GB/s
+
+Finished 11 data sizes, 4 conditions each.
+Saved: pcie_results.csv
+
+Below is a summary of your jobs efficency.
+Please use this to adjust Time, CPU and Memory allocations to ensure an efficently running cluster :)
+   JobID    State       Elapsed  TimeEff   CPUEff   MemEff 
+  279661  COMPLETED    00:00:07   0.6%     71.4%    33.8%

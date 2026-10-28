@@ -1,0 +1,645 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,graphicx,booktabs,tabularx,array}
+\usepackage{xcolor,listings,enumitem,microtype,fancyhdr,caption,needspace}
+\usepackage[hidelinks]{hyperref}
+\definecolor{accent}{HTML}{155A75}
+\definecolor{codebg}{HTML}{F3F6F8}
+\graphicspath{{images/}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{.45em}
+\setlength{\emergencystretch}{3em}
+\setlist{leftmargin=*,itemsep=2pt,topsep=3pt}
+\captionsetup{font=small,labelfont=bf}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small GPU Computing \textbar\ Lecture 2}
+\fancyhead[R]{\small CUDA Programming}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14pt}
+\setcounter{tocdepth}{1}
+\let\originalsection\section
+\renewcommand{\section}{\Needspace{7\baselineskip}\originalsection}
+\let\originalsubsection\subsection
+\renewcommand{\subsection}{\Needspace{5\baselineskip}\originalsubsection}
+\lstset{language=C++,basicstyle=\ttfamily\small,backgroundcolor=\color{codebg},
+ keywordstyle=\color{accent}\bfseries,commentstyle=\color{gray},
+ breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,
+ frame=single,rulecolor=\color{black!15},framesep=6pt,
+ aboveskip=9pt,belowskip=9pt}
+\newcommand{\src}[1]{\par{\small\color{accent}\textit{References: #1.}}\par}
+\newcommand{\nota}[1]{\par\smallskip\noindent\textbf{Clarification.} #1\par\smallskip}
+\newcommand{\figura}[4]{\begin{figure}[htbp]\centering
+ \includegraphics[width=#2\linewidth]{#1}\caption{#3}\label{#4}\end{figure}}
+\title{\textbf{GPU Computing}\\[.4em]\Large Lecture 2: Architecture and CUDA Programming}
+\author{Study notes integrating handwritten notes and lecture slides}
+\date{Lecture of 22 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+This study guide integrates the handwritten notes for the second lecture
+with the slides \emph{Lecture 02 -- CUDA Programming}. It moves from the
+CPU/GPU comparison to the CUDA execution model, memory management, and the
+SAXPY example. It includes explanations, selected original figures, code
+examples, and review questions. Material from the first lecture contained
+in the notes PDF is excluded.
+\end{abstract}
+\tableofcontents
+\newpage
+
+\section{CPU and GPU: different architectural goals}
+\src{slides 3--7; handwritten notes pp. 5--6}
+\subsection{Latency and throughput}
+The CPU is designed to execute an instruction sequence quickly, including
+dependencies, branches, and irregular accesses. Caches and sophisticated
+control logic help reduce the completion time of a single thread:
+the objective is \textbf{latency minimization}.
+
+The GPU devotes substantial resources to executing many threads in
+parallel. Its objective is \textbf{throughput}, the amount of work completed
+per unit of time. While some threads wait for memory, other ready threads
+can use the execution units. This is the meaning of \emph{latency tolerance}
+in the handwritten notes: independent work hides the latency rather than
+eliminating it.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Aspect & CPU & GPU \\\midrule
+Objective & Low latency for individual threads & High aggregate throughput \\
+Resources & Sophisticated control and caches & Many processing units \\
+Suitable work & Irregular flows, limited parallelism & Many elements with similar operations \\
+Memory waits & Reduce and anticipate accesses & Switch between ready groups of threads \\\bottomrule
+\end{tabularx}
+\end{center}
+
+An effective cache can make a CPU access very fast; a cache miss may
+instead require access to main memory. GPUs also have caches: the comparison
+reflects different design priorities, not their absence. Moreover, many
+threads alone do not guarantee high performance: independent work,
+efficient accesses, and sufficient resources are also required.
+
+\figura{die_cpu_gpu.pdf}{.95}{Die photographs: NVIDIA Kepler GK110 on the left and Intel Xeon E7 Westmere-EX on the right (slide 3). These historical examples illustrate different distributions of chip resources.}{fig:dies}
+
+\subsection{Host and device}
+In the model used in the lecture, the system is heterogeneous:
+\begin{itemize}
+\item the \textbf{host} is the CPU, which manages program flow;
+\item the \textbf{device} is the GPU, which executes highly parallel regions;
+\item host and device have separate memories, with explicit transfers.
+\end{itemize}
+Figure~\ref{fig:host} highlights three different connections: CPU--host
+memory, GPU--device memory, and host--GPU. High internal GPU memory
+bandwidth does not make transfers from the host equally fast.
+
+\figura{host_device.pdf}{.95}{Host/device diagram from slide 5. The annotations provide illustrative figures for AMD EPYC 9754 and NVIDIA H100 SXM; the northbridge diagram is conceptual and does not show the detailed interconnect of those systems.}{fig:host}
+
+The slides quote approximately 6 TFLOP/s in double precision for the CPU,
+34--67 TFLOP/s for the GPU, 460 GB/s to host memory, and 3.3 TB/s to GPU
+memory. These are neither SAXPY results nor guarantees for applications:
+performance depends on the operation type and the bottlenecks.
+Host--device bandwidth, annotated as 64 GB/s in the diagram, remains
+distinct from GPU memory bandwidth.
+
+\subsection{From the graphics pipeline to general-purpose computing}
+Slides 6 and 7 show the G80 architectural family from two perspectives.
+In graphics, work passes through stages dedicated to vertices, geometry,
+rasterization, and pixels. For general-purpose computing, the focus is
+instead on the multiprocessors that execute threads and access memory
+through load/store operations.
+
+\figura{g80_compute.pdf}{.91}{G80 viewed as a general-purpose computing architecture (slide 7): thread management, multiprocessors, and global memory access. This historical model helps explain CUDA abstractions.}{fig:g80}
+
+\nota{Here, \textbf{SM} means \emph{Streaming Multiprocessor}.
+The original figure also uses the abbreviation for \emph{shared memory};
+this guide always spells out the latter. An SM is a hardware unit; a CUDA
+block is a logical group of threads. They are not interchangeable.}
+
+\section{The CUDA programming model}
+\src{slides 9--14; handwritten notes pp. 6--7}
+\subsection{One program, two parts}
+CUDA expresses GPU computation through C/C++ extensions. The CPU performs
+initialization, control, and work with limited parallelism; the GPU executes
+functions called \textbf{kernels}, applied to many threads.
+The lecture introduces three central abstractions:
+\begin{enumerate}
+\item a hierarchy of threads;
+\item memory shared by threads within the same block;
+\item barriers to synchronize those threads.
+\end{enumerate}
+The model is \textbf{SPMD} (\emph{Single Program, Multiple Data}): every
+thread executes the same kernel but uses its own index to operate on
+different data. Threads may follow different branches. The programmer
+describes scalar threads without explicitly writing vector instructions.
+The hardware executes threads in groups called \emph{warps}; this connects
+the SPMD model to the GPU's SIMT execution.
+
+A kernel launch is normally asynchronous with respect to the host thread:
+the CPU may continue before the kernel finishes. This does not mean that
+every copy and every kernel automatically overlap. Dependencies must be
+respected, with explicit synchronization where necessary.
+
+\subsection{Grids, blocks, and threads}
+A kernel invocation creates a \textbf{grid} consisting of blocks.
+Each \textbf{block} contains threads; the ordinary configuration uses
+blocks of the same size. Grids and blocks can have one, two, or three
+dimensions.
+
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}lX@{}}\toprule
+Identifier & Meaning \\\midrule
+\texttt{threadIdx.x/y/z} & Zero-based coordinates of the thread within its block \\
+\texttt{blockIdx.x/y/z} & Zero-based coordinates of the block within the grid \\
+\texttt{blockDim.x/y/z} & Number of threads in the block along each axis \\
+\texttt{gridDim.x/y/z} & Number of blocks in the grid along each axis \\\bottomrule
+\end{tabularx}
+\end{center}
+
+\figura{thread_hierarchy.pdf}{.48}{Hierarchy of host, kernels, grids, blocks, and threads (slide 14). Each kernel invocation creates its own grid; thread indices are local to a block.}{fig:threads}
+
+The \texttt{dim3} type specifies nonnegative integer dimensions; omitted
+components are initialized to 1. For example, \texttt{dim3 block(16,16)}
+describes $16\cdot16\cdot1=256$ threads per block. Types such as
+\texttt{float2}, \texttt{float4}, and \texttt{int2} group components of basic
+types; they do not automatically request SIMD execution.
+
+\subsection{Launch configuration and block independence}
+The basic syntax is:
+\begin{lstlisting}
+kernel<<<numBlocks, threadsPerBlock>>>(args);
+\end{lstlisting}
+The first parameter describes the grid, the second the block. A 1D grid
+with $G$ blocks and $B$ threads per block launches $GB$ threads.
+In three dimensions, the total is
+\[
+T=(G_xG_yG_z)(B_xB_yB_z).
+\]
+Blocks may execute in any order, concurrently or sequentially. Ordinary
+kernel code must not require a preceding block to have already finished.
+This independence allows the same grid to run on GPUs with different
+numbers of SMs.
+
+\nota{Maximum dimensions along individual axes and the maximum
+\emph{total} number of threads per block are separate constraints.
+A tuple such as $1024\times1024\times64$ describes per-axis limits,
+not a valid block containing that product of threads. For the GPUs
+commonly considered in the lecture, the total limit is 1024; verify it
+on the device using \texttt{cudaGetDeviceProperties}, particularly
+\texttt{maxThreadsPerBlock}, \texttt{maxThreadsDim}, and
+\texttt{maxGridSize}. The historical limit of $65535$ blocks per axis
+must not be treated as a universal constant either.}
+
+\section{From indices to data: matrix addition}
+\src{slides 10--13}
+\subsection{Why a single block is not enough}
+The first version in the slides maps \texttt{threadIdx.x} and
+\texttt{threadIdx.y} to matrix indices and uses one $N\times N$ block.
+This illustrates the mapping, but the block must satisfy hardware limits.
+Large matrices require the work to be spread across multiple blocks.
+
+The global index in one dimension is
+\begin{equation}\boxed{i=\texttt{blockIdx.x}\cdot\texttt{blockDim.x}
+ +\texttt{threadIdx.x}.}\end{equation}
+With $B$ threads per block, block $b$ handles indices from $bB$ to
+$bB+B-1$. To cover $N>0$ elements:
+\begin{equation}
+G=\left\lceil\frac{N}{B}\right\rceil
+ =\frac{N+B-1}{B}\quad\text{using integer division}.
+\end{equation}
+The final block may contain extra threads: check that an index is valid
+before accessing the data.
+
+\subsection{A complete 2D mapping example}
+Here, $x$ denotes the column and $y$ the row. Matrices are stored in linear
+arrays in row-major order; element $(r,c)$ occupies position $rN+c$.
+This choice keeps accesses close together for threads differing in $x$.
+
+\begin{lstlisting}
+__global__ void matAdd(const float *A, const float *B,
+                       float *C, int N)
+{
+    int c = blockIdx.x * blockDim.x + threadIdx.x;
+    int r = blockIdx.y * blockDim.y + threadIdx.y;
+    if (r < N && c < N) {
+        size_t k = (size_t)r * N + c;
+        C[k] = A[k] + B[k];
+    }
+}
+
+// A, B, C refer to buffers already allocated on the device.
+dim3 block(16, 16);
+dim3 grid((N + block.x - 1) / block.x,
+          (N + block.y - 1) / block.y);
+matAdd<<<grid, block>>>(d_A, d_B, d_C, N);
+\end{lstlisting}
+
+For $N=50$, each grid axis requires $\lceil50/16\rceil=4$ blocks.
+We launch $4\cdot4=16$ blocks with 256 threads each: 4096 threads for
+2500 valid elements. The remaining 1596 threads skip the addition because
+of the bounds check. Slide 12 shows $4.0625$: this is the real-valued
+result of $65/16$ before integer division truncates it to 4.
+
+\subsection{Choosing block size and block count}
+The slides suggest more blocks than SMs, approximately more than twice
+as many, and an indicative range of 100--1000 blocks. These are
+\textbf{heuristics}, not correctness requirements or a universal optimum.
+The aim is to provide enough ready work to tolerate latency.
+
+A larger block contains more threads but also consumes more registers and
+shared memory. Heavy resource use may reduce the number of blocks that can
+reside simultaneously on an SM. Concurrency, resources per thread, and data
+volume must therefore be balanced. A practical starting point is 128 or
+256 threads for a 1D kernel, followed by measurement: increasing the block
+size to the maximum allowed does not guarantee improvement.
+
+\section{Communication and synchronization}
+\src{slides 14 and 18; handwritten notes p. 7}
+\subsection{Cooperation within a block}
+Threads in the same block can cooperate through shared memory, atomic
+operations, and barriers. The \texttt{\_\_syncthreads()} barrier coordinates
+the block's threads and makes preceding shared and global memory accesses
+visible among them according to its guarantees. It does not synchronize
+the entire grid.
+
+A typical producer--consumer sequence is:
+\begin{lstlisting}
+__shared__ float tile[256];
+int t = threadIdx.x;
+tile[t] = input[t];       // each thread produces a value
+__syncthreads();          // the block completes this phase
+float v = tile[(t + 1) % 256]; // read another thread's value
+\end{lstlisting}
+This fragment assumes a 1D block with 256 threads and at least 256 valid
+elements in \texttt{input}. If only some threads reach the barrier, the
+program is incorrect: a condition surrounding the barrier must be uniform
+across the block. Bounds checking must not prevent some threads from
+participating in required barriers.
+
+\subsection{Across different blocks}
+Global memory is accessible to all blocks, but visibility alone does not
+provide synchronization. Two threads updating the same data without a
+correct protocol can cause a race condition. An atomic operation protects
+its own update; it is not a general barrier that completes every block's
+work.
+
+In the lecture's basic model, the simplest way to separate dependent
+phases is to use two kernels in the \textbf{same stream}: the second reads
+the results after the first has completed. Different streams require
+explicit dependencies. Host synchronization, for example
+\texttt{cudaDeviceSynchronize()}, lets the CPU wait for preceding device
+work to complete.
+
+\nota{The statement ``blocks cannot interact'' in the slides should be
+understood as the absence of an ordinary barrier across blocks.
+Communication through global memory and advanced mechanisms do exist.
+Also, \texttt{volatile} does not replace atomics, barriers, or correct
+memory ordering.}
+
+\section{The memory hierarchy}
+\src{slides 15--19 and 27; handwritten notes pp. 5, 7--8}
+\figura{memory_hierarchy.pdf}{.58}{Visibility hierarchy (slide 15): private thread registers, shared memory per block, and global memory accessible throughout the grid. The host transfers data through the appropriate APIs.}{fig:memory}
+
+\subsection{Global memory}
+Global memory is device memory that all threads can read and write.
+It has greater capacity than on-chip memory but high latency. An explicitly
+allocated buffer can outlive the threads and kernels using it, until it
+is freed.
+
+Fine-grained, scattered accesses can waste bandwidth. A good arrangement
+lets nearby threads access nearby addresses so requests can be served
+efficiently. This is why index mapping is also a performance decision.
+
+The fundamental operations are:
+\begin{lstlisting}
+float *d_x = nullptr;
+size_t bytes = (size_t)N * sizeof(float);
+cudaMalloc((void **)&d_x, bytes);
+cudaMemcpy(d_x, h_x, bytes, cudaMemcpyHostToDevice);
+// ... kernels using d_x ...
+cudaMemcpy(h_x, d_x, bytes, cudaMemcpyDeviceToHost);
+cudaFree(d_x);
+\end{lstlisting}
+\texttt{cudaMalloc} receives the address of the pointer and returns an
+error code; it does not directly return a buffer as \texttt{malloc} does.
+This corrects the pseudocode in slide 16. Pointers passed to kernels must
+refer to memory accessible to the device: in the explicit-memory model
+used here, an ordinary buffer obtained through \texttt{malloc} is not used
+directly as a GPU buffer.
+
+\subsection{Registers and shared memory}
+Registers hold private thread state. Shared memory is on-chip memory
+managed by the programmer and shared by threads \emph{within the same
+block}. Each block has its own instance:
+\texttt{\_\_shared\_\_ float tile[256];} does not create an array shared
+across the entire grid.
+
+Its lifetime is that of the \textbf{block}, not the whole program.
+This is more precise than the generic ``thread lifetime'' wording in the
+notes and slide 17. Shared memory supports data reuse and exchange of
+intermediate results, but explicit coordination is needed when a thread
+reads data produced by other threads.
+
+The memory is organized into \textbf{banks}. The lecture mentions 16--32
+banks with 32-bit words, depending on the architecture. In a simple model
+with $b$ banks and 4-byte words:
+\[
+\operatorname{bank}(a)=\left\lfloor\frac{a}{4}\right\rfloor\bmod b.
+\]
+Requests to different banks can be served in parallel. Requests to different
+words in the same bank may require serialization (a \emph{bank conflict});
+reads of the same word can benefit from broadcast. Access cost is not
+always equal to register access: conflicts and access patterns matter.
+
+\subsection{Variable qualifiers}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Declaration & Location and visibility & Lifetime / use \\\midrule
+\texttt{\_\_device\_\_ float v;} & Symbol in device memory, accessible to GPU code & Context lifetime; host access through symbol APIs \\
+\texttt{\_\_constant\_\_ float v;} & Constant memory, read by GPU code & Context lifetime; initialized by the host through APIs \\
+\texttt{\_\_shared\_\_ float v;} & Block's shared memory & Block lifetime \\
+Kernel local variable & Private to the thread; often registers & Local execution lifetime \\\bottomrule
+\end{tabularx}\end{center}
+``Accessible from host and device'' in the original table does not mean
+that the host can directly dereference a device symbol like a CPU variable.
+Appropriate operations are used, for example \texttt{cudaMemcpyToSymbol}.
+The texture references in slide 18 are a historical form of the texture
+interface; they are not needed for this guide's examples.
+
+\subsection{Pageable and pinned memory}
+Ordinary host memory allocated with \texttt{malloc} is \emph{pageable}.
+\emph{Pinned}, or \emph{page-locked}, memory remains locked in physical
+memory and enables efficient DMA transfers. A different pair of functions
+allocates and frees it:
+\begin{lstlisting}
+float *h_x = nullptr;
+cudaMallocHost((void **)&h_x, bytes);
+// ... use the host buffer and transfer data ...
+cudaFreeHost(h_x);
+\end{lstlisting}
+Using \texttt{cudaMallocHost} does not move the buffer into GPU memory:
+it remains \emph{host} memory. Pinned memory is a limited resource;
+locking too much can harm system performance. Its main benefit here
+concerns transfers, not kernel arithmetic.
+
+\texttt{cudaMemcpyAsync} enqueues copies in a stream. Truly asynchronous
+host--device copies and useful overlap normally use pinned host memory;
+suitable hardware support and compatible dependencies are also needed.
+The word \texttt{Async} alone does not guarantee that copying and computation
+run concurrently. Describing \texttt{cudaMemcpy} as always ``blocking''
+is also a simplification: behavior depends on transfer type and direction.
+
+\section{Functions and compilation}
+\src{slides 20--22}
+\subsection{Function qualifiers}
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}lXX@{}}\toprule
+Qualifier & Execution & Use in the basic model \\\midrule
+\texttt{\_\_host\_\_} & CPU & Function called from the host; qualifier normally implicit \\
+\texttt{\_\_device\_\_} & GPU & Helper function called from device code \\
+\texttt{\_\_global\_\_} & GPU & Kernel launched from the host with a grid/block configuration; returns \texttt{void} \\\bottomrule
+\end{tabularx}
+\end{center}
+A \texttt{\_\_host\_\_ \_\_device\_\_} function can be compiled for both
+environments, subject to the constraints of each.
+
+\nota{Absolute prohibitions in slide 20, such as ``no recursion'' or
+``no device function pointers'', reflect historical limitations and
+should not be memorized as universal rules of current CUDA. Specific
+language and target restrictions still apply. For this lecture, the key
+distinction is where functions execute and where they are called from.}
+
+\subsection{nvcc, PTX, and machine code}
+\texttt{nvcc} is a \emph{compiler driver}: it coordinates the tools needed
+to compile the host and device portions of a CUDA program. Host code is
+compiled for the CPU; device code can be supplied as machine code for a
+target and/or as \textbf{PTX}.
+
+PTX (\emph{Parallel Thread Execution}) is a virtual ISA, an intermediate
+representation. The driver can translate it into machine code for the
+available GPU through \emph{just-in-time} (JIT) compilation. This should
+not be confused with interpreting instructions one at a time.
+The CUDA runtime, \texttt{cudart}, provides the high-level interface used
+in the examples; the driver API is the lower-level interface.
+
+\figura{compilation.pdf}{.35}{Conceptual compilation flow (slide 21): host and device paths, with PTX translated for a GPU target. The targets shown are historical examples.}{fig:compile}
+
+\subsection{Device properties}
+Slide 22 compares devices from different generations. The aim is to
+understand which properties to inspect, rather than treating a table as
+a set of constraints for all GPUs. Relevant properties include:
+\begin{itemize}
+\item compute capability, which identifies the feature family;
+\item number of SMs and warp size;
+\item available global memory;
+\item shared memory and registers available per block/SM;
+\item limits for threads, blocks, and grids;
+\item support for concurrent copying and execution.
+\end{itemize}
+\texttt{deviceQuery} is the example mentioned in the slides for inspecting
+these properties. The table's ``CUDA cores'' are not independent CPUs,
+and their number does not determine how many logical threads a kernel
+can launch.
+
+\section{SAXPY: from the algorithm to total cost}
+\src{slides 23--27}
+\subsection{Operation and parallelization}
+SAXPY stands for \emph{Single-precision Alpha X Plus Y}:
+\begin{equation}\boxed{y_i\leftarrow\alpha x_i+y_i,\qquad 0\leq i<N.}\end{equation}
+Elements are independent provided the buffers are used without problematic
+overlap. The transformation is straightforward: the CPU loop becomes a
+set of GPU threads, each responsible for one index.
+
+\begin{lstlisting}
+void saxpy_serial(int n, float alpha,
+                  const float *x, float *y)
+{
+    for (int i = 0; i < n; ++i)
+        y[i] = alpha * x[i] + y[i];
+}
+
+__global__ void saxpy(int n, float alpha,
+                      const float *x, float *y)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n)
+        y[i] = alpha * x[i] + y[i];
+}
+\end{lstlisting}
+
+\subsection{A minimal host sequence}
+The following fragment assumes $N>0$, \texttt{h\_x} and \texttt{h\_y}
+already allocated and initialized, sizes compatible with \texttt{int}
+indices, and a valid device configuration. It shows the complete data
+lifecycle; application code must check all return values.
+
+\begin{lstlisting}
+size_t bytes = (size_t)N * sizeof(float);
+float *d_x = nullptr, *d_y = nullptr;
+cudaMalloc((void **)&d_x, bytes);
+cudaMalloc((void **)&d_y, bytes);
+
+cudaMemcpy(d_x, h_x, bytes, cudaMemcpyHostToDevice);
+cudaMemcpy(d_y, h_y, bytes, cudaMemcpyHostToDevice);
+
+int block = 256;
+int grid = (N + block - 1) / block;
+saxpy<<<grid, block>>>(N, alpha, d_x, d_y);
+cudaError_t launchStatus = cudaGetLastError();
+cudaError_t runStatus = cudaDeviceSynchronize();
+// Check launchStatus and runStatus before proceeding.
+
+cudaMemcpy(h_y, d_y, bytes, cudaMemcpyDeviceToHost);
+cudaFree(d_y);
+cudaFree(d_x);
+\end{lstlisting}
+Both $x$ and the initial value of $y$ are copied to the device; only the
+new $y$ needs to be copied back. The scalar argument $\alpha$ is passed
+to the kernel. Explicit synchronization here makes the execution-error
+checkpoint clear; it is not necessary after every kernel when other
+operations already enforce the required dependencies.
+
+\subsection{Memory footprint and traffic}
+Two vectors of $N$ four-byte \texttt{float} elements require
+\[
+M_{\mathrm{device}}=2N\cdot4=8N\ \text{bytes}.
+\]
+For $N=32\cdot2^{20}$, this is 256 MiB on the device; the host needs the
+same amount if both vectors are retained there. If ``32M'' instead means
+$32\cdot10^6$, the result is 256 decimal MB: units should be explicit.
+
+Each element requires two conventional floating-point operations
+(multiplication and addition, even when fused into an FMA), two reads,
+and one write. The kernel's logical traffic is therefore approximately
+$12N$ bytes, and its arithmetic intensity is
+\[
+I\simeq\frac{2\ \mathrm{FLOP}}{12\ \mathrm{bytes}}
+ =\frac{1}{6}\ \mathrm{FLOP/byte}.
+\]
+This simple count, added to help interpret the example, explains why SAXPY
+tends to be memory-bandwidth-bound for large vectors. With effective
+bandwidth $B_{\mathrm{mem}}$, the model's ideal limit is
+$\mathrm{FLOP/s}\lesssim B_{\mathrm{mem}}/6$.
+Caches, overhead, and device details can change physical traffic and
+observed execution time.
+
+\subsection{Kernel time and application time}
+If the data starts on the host, a complete measurement must include transfers:
+\[
+T_{\mathrm{tot}}=T_{\mathrm{H2D}}+T_{\mathrm{launch}}+
+T_{\mathrm{kernel}}+T_{\mathrm{D2H}},
+\]
+plus allocations, initialization, and synchronization when these fall
+within the measurement scope. For one SAXPY operation, logical transfers
+are $8N$ bytes to the GPU and $4N$ bytes back to the host: $12N$ bytes
+across the host--device link.
+
+\figura{saxpy_performance.pdf}{.95}{Measurements from slide 26: CPU time, GPU time, and transfer costs using pageable or pinned memory. Historical platform: Tesla K10, PCIe 2.0 x16, and Xeon E5 with a single-threaded CPU comparison. The highlighted thresholds belong to that experiment.}{fig:performance}
+
+Figure~\ref{fig:performance} shows that the kernel alone can be very fast,
+while including copies reduces the overall advantage. Fixed costs dominate
+small problems; larger problems allow the GPU to exploit parallelism.
+Pinned memory reduces data-movement costs but does not eliminate them.
+
+Keeping data on the GPU across multiple kernels amortizes copying costs.
+If $K$ consecutive operations reuse the buffers, one initial and one final
+transfer may replace transfers at every step. A meaningful measurement
+therefore distinguishes \emph{kernel-only} from \emph{end-to-end} time;
+the time taken for a launch call to return is not the kernel execution time.
+
+\section{Common errors and a checking method}
+\src{slides 28--29}
+\begin{description}[style=nextline]
+\item[\texttt{invalid configuration argument}]
+Check total thread count, per-axis dimensions, grid dimensions, and requested
+shared memory. Excessive register use or other resource requirements may
+also cause resource-specific launch errors; these do not all share one code.
+\item[\texttt{unspecified launch failure}]
+This may be associated with an illegal access or another execution error.
+Check indices, allocations, byte counts, and pointer validity. It does not
+uniquely diagnose a segmentation fault.
+\item[\texttt{the launch timed out and was terminated}]
+An excessively long kernel may be interrupted by a watchdog on systems
+configured to use one. The slides' ``Stop X11'' suggestion is a historical,
+environment-specific workaround, not a general rule.
+\item[Shared-memory compilation errors]
+Check declarations, sizes, and syntax. CUDA distinguishes static
+\texttt{\_\_shared\_\_} allocation from dynamic
+\texttt{extern \_\_shared\_\_} allocation, whose byte count is specified
+at launch. The \texttt{\_\_eh\_curr\_region} message in the slides concerns
+a historical scenario; it does not mean dynamic shared memory is forbidden.
+\end{description}
+
+A practical method is to check every CUDA call, immediately check launch
+errors with \texttt{cudaGetLastError()}, and check a synchronization
+operation to catch asynchronous errors. Validate results against a CPU
+version using an appropriate numerical tolerance: floating-point arithmetic
+and FMA may produce small differences without an indexing error.
+
+\section{Active review}
+\subsection{Questions with short answers}
+\begin{enumerate}
+\item \textbf{Why can a GPU tolerate latency?}
+It can execute other ready groups of threads while some wait; enough work
+and resources are needed to keep those groups available.
+\item \textbf{What is the difference between a block and an SM?}
+A block is a logical group of threads; an SM is the hardware executing
+assigned blocks. Multiple blocks can reside on one SM if resources permit.
+\item \textbf{With $N=1000$ and 256 threads per block, how many blocks are needed?}
+Four, giving 1024 threads; 24 threads skip data accesses because of \texttt{if(i<N)}.
+\item \textbf{Is a $(32,32,2)$ block valid with a total limit of 1024?}
+No: it contains 2048 threads, even if each axis satisfies its own limit.
+\item \textbf{Can a block wait for block 0 to finish?}
+Not by assuming an ordinary scheduling order. The basic approach separates
+phases into kernels ordered within the same stream.
+\item \textbf{Does \texttt{\_\_syncthreads()} synchronize the host?}
+No: it is a barrier among a block's threads, not CPU/GPU synchronization.
+\item \textbf{Does shared memory persist between kernels?}
+No: it belongs to a block. An explicitly allocated global buffer can persist.
+\item \textbf{Is pinned memory device memory?}
+No: it is page-locked host memory, freed with \texttt{cudaFreeHost}.
+\item \textbf{Why does SAXPY not necessarily reach peak TFLOP/s?}
+It performs few operations per byte transferred and is often bandwidth-bound.
+\item \textbf{Why can a fast kernel still produce a slow application?}
+Copies, allocations, launches, and synchronization may dominate total time.
+\end{enumerate}
+
+\subsection{An operational sequence to remember}
+\begin{enumerate}
+\item Identify independent work and the data needed on the device.
+\item Allocate buffers and transfer inputs.
+\item Choose block and grid dimensions valid for the device.
+\item Compute global indices and check array bounds.
+\item Launch the kernel and respect dependencies between phases.
+\item Check errors and numerical correctness.
+\item Copy results back and free each buffer with the correct API.
+\item Measure total time and kernel time separately.
+\end{enumerate}
+
+\clearpage
+\section*{Sources and integration criteria}
+\addcontentsline{toc}{section}{Sources and integration criteria}
+\begin{itemize}
+\item \textbf{Course slides:} \texttt{assignment2/data/lec-02.pdf},
+\emph{GPU Computing -- Architecture + Programming, Lecture 02 -- CUDA
+Programming}, Holger Fr{\"o}ning and Kazem Shekofteh, Heidelberg University.
+Includes material from D. Kirk and W. Hwu, \emph{Programming Massively
+Parallel Processors}. Figures in this guide are extracts from the cited slides.
+\item \textbf{Personal notes:}
+\texttt{assignment2/raw/GPU\ \_261022\_103341.pdf}, pp. 5--8 only
+(heading ``Lecture 2''). Pages 1--4 cover the first lecture and have not
+been integrated.
+\item \textbf{Technical checks:} official NVIDIA documentation,
+\href{https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/intro-to-cuda-cpp.html}{\emph{Intro to CUDA C++}},
+\href{https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/writing-cuda-kernels.html}{\emph{Writing SIMT Kernels}},
+\href{https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cpp-language-support.html}{\emph{C++ Language Support}}, and
+\href{https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__MEMORY.html}{\emph{Runtime API: Memory Management}}.
+Used to clarify APIs, synchronization, and historical restrictions.
+\end{itemize}
+This guide reorganizes and explains the materials rather than transcribing
+them literally. Conceptual corrections are identified in the text; thread,
+traffic, and arithmetic-intensity counts are educational extensions of the
+examples. The organizational schedule on slide 2 and divider pages are
+not study topics. The CUDA fragments illustrate the model; they do not
+constitute a standalone program compiled or benchmarked on a GPU.
+\end{document}

@@ -1,0 +1,22 @@
+[DEBUG] Avvio: 100000 lanci per prova, passo di 100 cicli.
+[DEBUG] Inizio misura base.
+[DEBUG] Base: totale=268.196 ms, media=2.682 us, soglia=5.364 us
+[DEBUG] Ricerca avviata: stampa le prime 10 prove, poi una ogni 100.
+[DEBUG] Prova=1, cicli=100, media=2.688 us, soglia=5.364 us
+[DEBUG] Prova=2, cicli=200, media=2.678 us, soglia=5.364 us
+[DEBUG] Prova=3, cicli=300, media=2.683 us, soglia=5.364 us
+[DEBUG] Prova=4, cicli=400, media=2.691 us, soglia=5.364 us
+[DEBUG] Prova=5, cicli=500, media=2.713 us, soglia=5.364 us
+[DEBUG] Prova=6, cicli=600, media=2.725 us, soglia=5.364 us
+[DEBUG] Prova=7, cicli=700, media=2.744 us, soglia=5.364 us
+[DEBUG] Prova=8, cicli=800, media=2.759 us, soglia=5.364 us
+[DEBUG] Prova=9, cicli=900, media=2.760 us, soglia=5.364 us
+[DEBUG] Prova=10, cicli=1000, media=2.755 us, soglia=5.364 us
+[DEBUG] Prova=75, cicli=7500, media=5.368 us, soglia=5.364 us
+num clock -> 7500
+Dati salvati in waitKernel_results.txt
+
+Below is a summary of your jobs efficency.
+Please use this to adjust Time, CPU and Memory allocations to ensure an efficently running cluster :)
+   JobID    State       Elapsed  TimeEff   CPUEff   MemEff 
+  279660  COMPLETED    00:00:29   2.4%     93.1%     0.4%  

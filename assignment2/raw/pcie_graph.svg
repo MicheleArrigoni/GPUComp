@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="690" viewBox="0 0 1020 690">
+<rect width="100%" height="100%" fill="white"/>
+<text x="98" y="39" font-family="Arial,sans-serif" font-size="25" font-weight="bold" fill="#111827">PCIe data transfers: effective bandwidth</text>
+<text x="98" y="66" font-family="Arial,sans-serif" font-size="14" fill="#475569">CUDA cudaMemcpy | pageable vs pinned | host-to-device vs device-to-host</text>
+<line x1="98" y1="575.0" x2="920" y2="575.0" stroke="#e5e7eb"/>
+<text x="85" y="580.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">0.0</text>
+<line x1="98" y1="483.0" x2="920" y2="483.0" stroke="#e5e7eb"/>
+<text x="85" y="488.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">3.2</text>
+<line x1="98" y1="391.0" x2="920" y2="391.0" stroke="#e5e7eb"/>
+<text x="85" y="396.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">6.4</text>
+<line x1="98" y1="299.0" x2="920" y2="299.0" stroke="#e5e7eb"/>
+<text x="85" y="304.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">9.6</text>
+<line x1="98" y1="207.0" x2="920" y2="207.0" stroke="#e5e7eb"/>
+<text x="85" y="212.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">12.8</text>
+<line x1="98" y1="115.0" x2="920" y2="115.0" stroke="#e5e7eb"/>
+<text x="85" y="120.0" text-anchor="end" font-family="Arial" font-size="13" fill="#475569">16.0</text>
+<line x1="98" y1="575" x2="920" y2="575" stroke="#334155"/>
+<line x1="98" y1="115" x2="98" y2="575" stroke="#334155"/>
+<text x="20" y="360" transform="rotate(-90 20 360)" font-family="Arial" font-size="15" fill="#334155">Effective bandwidth (GB/s)</text>
+<text x="510" y="658" text-anchor="middle" font-family="Arial" font-size="15" fill="#334155">Transfer size (log scale)</text>
+<line x1="98.0" y1="575" x2="98.0" y2="581" stroke="#334155"/>
+<text x="98.0" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">1 KiB</text>
+<line x1="180.2" y1="575" x2="180.2" y2="581" stroke="#334155"/>
+<text x="180.2" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">4 KiB</text>
+<line x1="262.4" y1="575" x2="262.4" y2="581" stroke="#334155"/>
+<text x="262.4" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">16 KiB</text>
+<line x1="344.6" y1="575" x2="344.6" y2="581" stroke="#334155"/>
+<text x="344.6" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">64 KiB</text>
+<line x1="426.8" y1="575" x2="426.8" y2="581" stroke="#334155"/>
+<text x="426.8" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">256 KiB</text>
+<line x1="509.0" y1="575" x2="509.0" y2="581" stroke="#334155"/>
+<text x="509.0" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">1 MiB</text>
+<line x1="591.2" y1="575" x2="591.2" y2="581" stroke="#334155"/>
+<text x="591.2" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">4 MiB</text>
+<line x1="673.4" y1="575" x2="673.4" y2="581" stroke="#334155"/>
+<text x="673.4" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">16 MiB</text>
+<line x1="755.6" y1="575" x2="755.6" y2="581" stroke="#334155"/>
+<text x="755.6" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">64 MiB</text>
+<line x1="837.8" y1="575" x2="837.8" y2="581" stroke="#334155"/>
+<text x="837.8" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">256 MiB</text>
+<line x1="920.0" y1="575" x2="920.0" y2="581" stroke="#334155"/>
+<text x="920.0" y="600" text-anchor="middle" font-family="Arial" font-size="12" fill="#475569">1 GiB</text>
+<polyline points="98.0,570.1 180.2,556.5 262.4,511.2 344.6,434.6 426.8,388.6 509.0,362.4 591.2,260.1 673.4,224.8 755.6,212.4 837.8,209.3 920.0,207.6" fill="none" stroke="#2563eb" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="98.0" cy="570.1" r="3.7" fill="#2563eb"/>
+<circle cx="180.2" cy="556.5" r="3.7" fill="#2563eb"/>
+<circle cx="262.4" cy="511.2" r="3.7" fill="#2563eb"/>
+<circle cx="344.6" cy="434.6" r="3.7" fill="#2563eb"/>
+<circle cx="426.8" cy="388.6" r="3.7" fill="#2563eb"/>
+<circle cx="509.0" cy="362.4" r="3.7" fill="#2563eb"/>
+<circle cx="591.2" cy="260.1" r="3.7" fill="#2563eb"/>
+<circle cx="673.4" cy="224.8" r="3.7" fill="#2563eb"/>
+<circle cx="755.6" cy="212.4" r="3.7" fill="#2563eb"/>
+<circle cx="837.8" cy="209.3" r="3.7" fill="#2563eb"/>
+<circle cx="920.0" cy="207.6" r="3.7" fill="#2563eb"/>
+<polyline points="98.0,571.4 180.2,561.0 262.4,528.6 344.6,470.7 426.8,426.6 509.0,409.8 591.2,322.5 673.4,286.1 755.6,275.0 837.8,271.9 920.0,276.6" fill="none" stroke="#06b6d4" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="98.0" cy="571.4" r="3.7" fill="#06b6d4"/>
+<circle cx="180.2" cy="561.0" r="3.7" fill="#06b6d4"/>
+<circle cx="262.4" cy="528.6" r="3.7" fill="#06b6d4"/>
+<circle cx="344.6" cy="470.7" r="3.7" fill="#06b6d4"/>
+<circle cx="426.8" cy="426.6" r="3.7" fill="#06b6d4"/>
+<circle cx="509.0" cy="409.8" r="3.7" fill="#06b6d4"/>
+<circle cx="591.2" cy="322.5" r="3.7" fill="#06b6d4"/>
+<circle cx="673.4" cy="286.1" r="3.7" fill="#06b6d4"/>
+<circle cx="755.6" cy="275.0" r="3.7" fill="#06b6d4"/>
+<circle cx="837.8" cy="271.9" r="3.7" fill="#06b6d4"/>
+<circle cx="920.0" cy="276.6" r="3.7" fill="#06b6d4"/>
+<polyline points="98.0,570.7 180.2,558.7 262.4,516.7 344.6,420.4 426.8,297.6 509.0,230.0 591.2,206.4 673.4,200.9 755.6,197.7 837.8,197.2 920.0,197.1" fill="none" stroke="#dc2626" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="98.0" cy="570.7" r="3.7" fill="#dc2626"/>
+<circle cx="180.2" cy="558.7" r="3.7" fill="#dc2626"/>
+<circle cx="262.4" cy="516.7" r="3.7" fill="#dc2626"/>
+<circle cx="344.6" cy="420.4" r="3.7" fill="#dc2626"/>
+<circle cx="426.8" cy="297.6" r="3.7" fill="#dc2626"/>
+<circle cx="509.0" cy="230.0" r="3.7" fill="#dc2626"/>
+<circle cx="591.2" cy="206.4" r="3.7" fill="#dc2626"/>
+<circle cx="673.4" cy="200.9" r="3.7" fill="#dc2626"/>
+<circle cx="755.6" cy="197.7" r="3.7" fill="#dc2626"/>
+<circle cx="837.8" cy="197.2" r="3.7" fill="#dc2626"/>
+<circle cx="920.0" cy="197.1" r="3.7" fill="#dc2626"/>
+<polyline points="98.0,570.9 180.2,558.4 262.4,511.0 344.6,402.9 426.8,279.2 509.0,215.1 591.2,193.2 673.4,187.8 755.6,186.2 837.8,185.8 920.0,185.7" fill="none" stroke="#e88d10" stroke-width="2.6" stroke-linejoin="round"/>
+<circle cx="98.0" cy="570.9" r="3.7" fill="#e88d10"/>
+<circle cx="180.2" cy="558.4" r="3.7" fill="#e88d10"/>
+<circle cx="262.4" cy="511.0" r="3.7" fill="#e88d10"/>
+<circle cx="344.6" cy="402.9" r="3.7" fill="#e88d10"/>
+<circle cx="426.8" cy="279.2" r="3.7" fill="#e88d10"/>
+<circle cx="509.0" cy="215.1" r="3.7" fill="#e88d10"/>
+<circle cx="591.2" cy="193.2" r="3.7" fill="#e88d10"/>
+<circle cx="673.4" cy="187.8" r="3.7" fill="#e88d10"/>
+<circle cx="755.6" cy="186.2" r="3.7" fill="#e88d10"/>
+<circle cx="837.8" cy="185.8" r="3.7" fill="#e88d10"/>
+<circle cx="920.0" cy="185.7" r="3.7" fill="#e88d10"/>
+<line x1="105" y1="82" x2="127" y2="82" stroke="#2563eb" stroke-width="3"/>
+<text x="136" y="87" font-family="Arial" font-size="13" fill="#1f2937">Pageable CPU to GPU</text>
+<line x1="505" y1="82" x2="527" y2="82" stroke="#06b6d4" stroke-width="3"/>
+<text x="536" y="87" font-family="Arial" font-size="13" fill="#1f2937">Pageable GPU to CPU</text>
+<line x1="105" y1="105" x2="127" y2="105" stroke="#dc2626" stroke-width="3"/>
+<text x="136" y="110" font-family="Arial" font-size="13" fill="#1f2937">Pinned CPU to GPU</text>
+<line x1="505" y1="105" x2="527" y2="105" stroke="#e88d10" stroke-width="3"/>
+<text x="536" y="110" font-family="Arial" font-size="13" fill="#1f2937">Pinned GPU to CPU</text>
+</svg>
