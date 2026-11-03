@@ -1,0 +1,49 @@
+GPU: NVIDIA GeForce RTX 2080 Ti
+Maximum transfer size: 1024 MiB
+      1024 B  pageable  H2D       0.169 GB/s
+      1024 B  pageable  D2H      0.1266 GB/s
+      1024 B    pinned  H2D      0.1474 GB/s
+      1024 B    pinned  D2H      0.1461 GB/s
+      4096 B  pageable  H2D      0.6389 GB/s
+      4096 B  pageable  D2H      0.4861 GB/s
+      4096 B    pinned  H2D      0.5611 GB/s
+      4096 B    pinned  D2H      0.5777 GB/s
+     16384 B  pageable  H2D       2.187 GB/s
+     16384 B  pageable  D2H       1.615 GB/s
+     16384 B    pinned  H2D       2.013 GB/s
+     16384 B    pinned  D2H        2.22 GB/s
+     65536 B  pageable  H2D       4.753 GB/s
+     65536 B  pageable  D2H       3.621 GB/s
+     65536 B    pinned  H2D       5.372 GB/s
+     65536 B    pinned  D2H        5.98 GB/s
+    262144 B  pageable  H2D       6.313 GB/s
+    262144 B  pageable  D2H       5.173 GB/s
+    262144 B    pinned  H2D        9.66 GB/s
+    262144 B    pinned  D2H       10.28 GB/s
+   1048576 B  pageable  H2D       7.149 GB/s
+   1048576 B  pageable  D2H       5.765 GB/s
+   1048576 B    pinned  H2D          12 GB/s
+   1048576 B    pinned  D2H       12.51 GB/s
+   4194304 B  pageable  H2D       10.82 GB/s
+   4194304 B  pageable  D2H       8.807 GB/s
+   4194304 B    pinned  H2D       12.84 GB/s
+   4194304 B    pinned  D2H       13.27 GB/s
+  16777216 B  pageable  H2D       12.13 GB/s
+  16777216 B  pageable  D2H        10.1 GB/s
+  16777216 B    pinned  H2D       13.02 GB/s
+  16777216 B    pinned  D2H       13.45 GB/s
+  67108864 B  pageable  H2D        12.6 GB/s
+  67108864 B  pageable  D2H       10.48 GB/s
+  67108864 B    pinned  H2D       13.12 GB/s
+  67108864 B    pinned  D2H       13.51 GB/s
+ 268435456 B  pageable  H2D       12.73 GB/s
+ 268435456 B  pageable  D2H       10.58 GB/s
+ 268435456 B    pinned  H2D       13.14 GB/s
+ 268435456 B    pinned  D2H       13.52 GB/s
+1073741824 B  pageable  H2D       12.76 GB/s
+1073741824 B  pageable  D2H       10.53 GB/s
+1073741824 B    pinned  H2D       13.14 GB/s
+1073741824 B    pinned  D2H       13.52 GB/s
+
+Finished 11 data sizes, 4 conditions each.
+Saved: pcie_results.csv
